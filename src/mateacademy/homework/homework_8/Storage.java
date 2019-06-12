@@ -10,6 +10,7 @@ public class Storage<T, K> {
     private int size;
     private int basket;
     private double loadFactor;
+    Node<K, T> currentNode;
     public Node<K, T>[] values;
 
     public Storage() {
@@ -45,7 +46,7 @@ public class Storage<T, K> {
         basket = getPutIndex(key);
         loadFactor = currentCapacity * 0.75;
         if (size < loadFactor) {
-            Node<K, T> currentNode = new Node(null, object, null);
+            currentNode = new Node(null, object, null);
             if (isCollision(values[basket], key)) {
                 collisionList(values, basket, currentNode);
             } else {
@@ -58,7 +59,7 @@ public class Storage<T, K> {
                 }
             }
         } else {
-            growArray();
+            growArray(object);
             put(key, value);
         }
     }
@@ -81,25 +82,27 @@ public class Storage<T, K> {
         return size;
     }
 
-    private void growArray() {
+    private void growArray(Entry<T, K> entry) {
         Node<K, T>[] growArray = new Node[currentCapacity * 3 / 2];
         currentCapacity = growArray.length;
-        size = 0;
+        basket = getPutIndex(entry.getKey());
+        currentNode = new Node(null, entry, null);
+        growArray[basket] = currentNode;
+        size = 1;
         for (int i = 0; i < values.length; i++) {
-            basket = getPutIndex(values[i].entry.getKey());
-            Node<K, T> currentNode = new Node(null, values[i].entry, null);
             if (values[i] != null) {
+                basket = getPutIndex(values[i].entry.getKey());
+                currentNode = new Node(null, values[i].entry, null);
                 if (isCollision(growArray[basket], values[i].entry.getKey())) {
                     collisionList(growArray, basket, currentNode);
                 }
-            } else {
                 growArray[basket] = currentNode;
                 size++;
             }
         }
-        for (int i = 0; i < values.length; i++) {
-            values[i] = null;
-        }
         values = Arrays.copyOf(growArray, growArray.length);
+        for (int i = 0; i < growArray.length; i++) {
+            growArray[i] = null;
+        }
     }
 }
